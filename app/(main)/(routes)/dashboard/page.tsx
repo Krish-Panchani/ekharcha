@@ -1,67 +1,38 @@
-"use client"
-import * as React from "react";
+"use client";
+import React from "react";
+import ExpenseDrawer from "./expence-drawer";
+import { useSummary } from "@/app/hooks/useSummary";
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-import ExpenseForm from "./expence-form";
-import { useUser } from "@clerk/nextjs";
+export default function DashboardPage() {
+  const { summary, loading, error, fetchSummary } = useSummary();
 
-export default function ExpenseDrawer() {
-  const [open, setOpen] = React.useState(false);
-  const [amount, setAmount] = React.useState("");
-  const [comment, setComment] = React.useState("");
-  const [selectedCategory, setCategory] = React.useState(1); // Default to the first category
-  const date = new Date();
-  const { user } = useUser();
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const expenseData = {
-      amount,
-      comment,
-      category: selectedCategory, // Include the selected category
-      date,
-      user: user?.id,
-    };
-    console.log(expenseData);
-    setOpen(false); // Close drawer after submit
-  };
+  const { income, expense } = summary || { income: {}, expense: {} };
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
-        <Button variant="outline">Add Expense</Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="text-left">
-          <DrawerTitle>Add Expense</DrawerTitle>
-          <DrawerDescription>
-            Enter your expense details and submit when you're ready.
-          </DrawerDescription>
-        </DrawerHeader>
-        <ExpenseForm
-          handleSubmit={handleSubmit}
-          setAmount={setAmount}
-          setComment={setComment}
-          setCategory={setCategory}
-          selectedCategory={selectedCategory}
-        />
-        <DrawerFooter className="pt-2">
-          <DrawerClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <ExpenseDrawer onExpenseAdded={fetchSummary} />
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-4">Summary</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-green-100 p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-2">Income</h3>
+            <p className="text-green-700">Daily: ${income.daily?.toFixed(2) ?? '0.00'}</p>
+            <p className="text-green-700">Weekly: ${income.weekly?.toFixed(2) ?? '0.00'}</p>
+            <p className="text-green-700">Monthly: ${income.monthly?.toFixed(2) ?? '0.00'}</p>
+            <p className="text-green-700">Total: ${income.total?.toFixed(2) ?? '0.00'}</p>
+          </div>
+          <div className="bg-red-100 p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-2">Expense</h3>
+            <p className="text-red-700">Daily: ${expense.daily?.toFixed(2) ?? '0.00'}</p>
+            <p className="text-red-700">Weekly: ${expense.weekly?.toFixed(2) ?? '0.00'}</p>
+            <p className="text-red-700">Monthly: ${expense.monthly?.toFixed(2) ?? '0.00'}</p>
+            <p className="text-red-700">Total: ${expense.total?.toFixed(2) ?? '0.00'}</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
