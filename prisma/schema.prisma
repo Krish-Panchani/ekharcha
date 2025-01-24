@@ -62,7 +62,7 @@ model Expense {
 
     amount     Float // Amount spent
     comment    String? // Optional comment
-    date       DateTime @default(now())
+    date       DateTime
     categoryId Int
     userId     String
 
@@ -80,7 +80,7 @@ model Income {
 
     amount     Float // Amount received
     comment    String? // Optional comment
-    date       DateTime @default(now())
+    date       DateTime
     categoryId Int
     userId     String
 
