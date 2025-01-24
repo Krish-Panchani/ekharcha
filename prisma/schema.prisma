@@ -12,28 +12,35 @@ generator client {
 
 // User model for handling users
 model User {
-    id         String     @id @default(uuid())
-    email      String     @unique
-    password   String
-    name       String
+    id String @id @default(cuid())
+
+    emailAddress String  @unique
+    imageUrl     String?
+    firstName    String?
+    lastName     String?
+
     expenses   Expense[]  @relation("UserExpenses")
     incomes    Income[]   @relation("UserIncomes")
     categories Category[]
-    createdAt  DateTime   @default(now())
-    updatedAt  DateTime   @updatedAt
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 // Category model for managing user-defined categories
 model Category {
-    id        Int          @id @default(autoincrement())
-    name      String
-    type      CategoryType
-    userId    String
-    user      User         @relation(fields: [userId], references: [id])
-    expenses  Expense[]    @relation("CategoryExpenses")
-    incomes   Income[]     @relation("CategoryIncomes")
-    createdAt DateTime     @default(now())
-    updatedAt DateTime     @updatedAt
+    id Int @id @default(autoincrement())
+
+    name   String
+    type   CategoryType
+    userId String
+
+    user     User      @relation(fields: [userId], references: [id])
+    expenses Expense[] @relation("CategoryExpenses")
+    incomes  Income[]  @relation("CategoryIncomes")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 // Enum to distinguish between Expense and Income categories
@@ -51,30 +58,35 @@ enum PaymentModeType {
 
 // Expense model for tracking expenses
 model Expense {
-    id            Int             @id @default(autoincrement())
-    amount        Float // Amount spent
-    comment       String? // Optional comment
-    date          DateTime        @default(now())
-    categoryId    Int
-    userId        String
-    paymentModeId Int
-    category      Category        @relation("CategoryExpenses", fields: [categoryId], references: [id])
-    user          User            @relation("UserExpenses", fields: [userId], references: [id])
-    paymentMode   PaymentModeType @default(UPI)
-    createdAt     DateTime        @default(now())
-    updatedAt     DateTime        @updatedAt
+    id Int @id @default(autoincrement())
+
+    amount     Float // Amount spent
+    comment    String? // Optional comment
+    date       DateTime @default(now())
+    categoryId Int
+    userId     String
+
+    category    Category        @relation("CategoryExpenses", fields: [categoryId], references: [id])
+    user        User            @relation("UserExpenses", fields: [userId], references: [id])
+    paymentMode PaymentModeType @default(UPI)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 // Income model for tracking income
 model Income {
-    id         Int      @id @default(autoincrement())
+    id Int @id @default(autoincrement())
+
     amount     Float // Amount received
     comment    String? // Optional comment
     date       DateTime @default(now())
     categoryId Int
     userId     String
-    category   Category @relation("CategoryIncomes", fields: [categoryId], references: [id])
-    user       User     @relation("UserIncomes", fields: [userId], references: [id])
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
+
+    category Category @relation("CategoryIncomes", fields: [categoryId], references: [id])
+    user     User     @relation("UserIncomes", fields: [userId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
