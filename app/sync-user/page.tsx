@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+// import { CategoryType } from "@prisma/client";
 import { notFound, redirect } from "next/navigation";
 
 const SyncUser = async () => {
@@ -16,6 +17,8 @@ const SyncUser = async () => {
         return notFound();
     }
 
+    // Upsert user into the database
+    // const createdUser = 
     await db.user.upsert({
         where: {
             emailAddress: user.emailAddresses[0]?.emailAddress ?? "",
@@ -33,6 +36,25 @@ const SyncUser = async () => {
             lastName: user.lastName,
         },
     });
+
+    // Add default categories for the user
+    // const defaultCategories = [
+    //     { name: 'Food & Dining', type: CategoryType.EXPENSE, userId: createdUser.id },
+    //     { name: 'Petrol', type: CategoryType.EXPENSE, userId: createdUser.id },
+    //     { name: 'Recharge & Bills', type: CategoryType.EXPENSE, userId: createdUser.id },
+    //     { name: 'Traveling', type: CategoryType.EXPENSE, userId: createdUser.id },
+    //     { name: 'Gift', type: CategoryType.EXPENSE, userId: createdUser.id },
+    //     { name: 'Salary', type: CategoryType.INCOME, userId: createdUser.id },
+    //     { name: 'Friend', type: CategoryType.INCOME, userId: createdUser.id },
+    //     { name: 'Bonuses', type: CategoryType.INCOME, userId: createdUser.id },
+    //     { name: 'Gift', type: CategoryType.INCOME, userId: createdUser.id },
+    // ];
+
+    // // Create the default categories in the database
+    // await db.category.createMany({
+    //     data: defaultCategories,
+    // });
+
     return redirect("/dashboard");
 };
 
