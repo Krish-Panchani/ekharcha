@@ -6,7 +6,6 @@ interface IncomeData {
     date: Date;
     categoryId: number;
     userId: string;
-    paymentMode: string; // Or PaymentModeType if you use the enum
 }
 
 export const useAddIncome = () => {
