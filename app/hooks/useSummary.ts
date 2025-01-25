@@ -1,30 +1,27 @@
-import { useState, useEffect } from "react";
+import useSWR from "swr";
 import axios from "axios";
 import { Summary } from "../types/types";
 
-export const useSummary = () => {
-    const [summary, setSummary] = useState<Summary | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+// Fetcher function that SWR will use for data fetching
+const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
-    const fetchSummary = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await axios.get("/api/summary");
-            setSummary(response.data);
-        } catch (err) {
-            console.error("Error fetching summary data:", err);
-            setSummary({ expense: { daily: 0, weekly: 0, monthly: 0, total: 0 }, income: { daily: 0, weekly: 0, monthly: 0, total: 0 } }); // Default fallback
-            setError("Failed to fetch summary data.");
-        } finally {
-            setLoading(false);
-        }
+export const useSummary = () => {
+    // Use SWR hook to fetch and cache the summary data
+    const { data, error, mutate } = useSWR<Summary>("/api/summary", fetcher, {
+        revalidateOnFocus: false,  // Disable revalidation when tab refocuses
+        dedupingInterval: 60000,   // Deduplicate requests for 60 seconds
+    });
+
+    // If you want to update summary manually, use mutate()
+    const refetchSummary = () => {
+        mutate();  // Re-fetch the summary data
     };
 
-    useEffect(() => {
-        fetchSummary();
-    }, []);
-
-    return { summary, loading, error, fetchSummary };
+    return {
+        summary: data,   // Cached summary data
+        loading: !data && !error,   // Loading state
+        error,            // Error state
+        refetchSummary,   // Function to manually trigger re-fetching
+        mutate,           // Function to manually update the cached data
+    };
 };
