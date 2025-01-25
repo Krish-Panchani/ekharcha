@@ -149,8 +149,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-gray-100 p-4 flex justify-center gap-4 shadow-md">
-        <ExpenseDrawer onExpenseAdded={handleExpenseAdded} />
-        <IncomeDrawer onIncomeAdded={handleIncomeAdded} />
+        <ExpenseDrawer onTransactionAdded={handleExpenseAdded} />
+        <IncomeDrawer onTransactionAdded={handleIncomeAdded} />
       </div>
     </div>
   );
