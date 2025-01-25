@@ -1,3 +1,4 @@
+// pages/DashboardPage.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -9,9 +10,11 @@ import IncomeDrawer from "./income-drawer";
 import { defaultSummaryWithExpense, defaultSummaryWithIncome, updateSummary } from "@/app/helper/summaryHelpers";
 import PeriodBalance from "./PeriodBalance";
 import ExpenseDrawer from "./expence-drawer";
+import { useTransactions } from "@/app/hooks/useTransactions";
 
 export default function DashboardPage() {
   const { summary, loading, error, mutate } = useSummary();
+  const { addTransaction } = useTransactions(); // Access the addTransaction method from the hook
   const [selectedPeriod, setSelectedPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
 
   const handleExpenseAdded = (newExpense: { amount: number }) => {
@@ -22,6 +25,18 @@ export default function DashboardPage() {
       },
       false
     );
+
+    // Add the new transaction to the list (as expense)
+    const newTransaction = {
+      id: Date.now(), // Assuming the ID is generated on the server or database
+      amount: -newExpense.amount,
+      category: { name: "Expense" }, // You can change this based on category
+      paymentMode: "Cash", // Example, adjust as needed
+      date: new Date().toISOString(),
+    };
+
+    // Add the new transaction and trigger SWR cache update
+    addTransaction(newTransaction);
   };
 
   const handleIncomeAdded = (newIncome: { amount: number }) => {
@@ -32,6 +47,18 @@ export default function DashboardPage() {
       },
       false
     );
+
+    // Add the new transaction to the list (as income)
+    const newTransaction = {
+      id: Date.now(), // Assuming the ID is generated on the server or database
+      amount: newIncome.amount,
+      category: { name: "Income" }, // You can change this based on category
+      paymentMode: "Bank", // Example, adjust as needed
+      date: new Date().toISOString(),
+    };
+
+    // Add the new transaction and trigger SWR cache update
+    addTransaction(newTransaction);
   };
 
   if (loading) return <p>Loading...</p>;
