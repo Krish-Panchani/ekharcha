@@ -22,7 +22,7 @@ import { PaymentModeType } from "@prisma/client";
 import { Expense, ExpenseCategory } from "@/app/types/types";
 
 interface ExpenseDrawerProps {
-    onExpenseAdded: () => void;
+    onExpenseAdded: (expense: Expense) => void;
 }
 
 export default function ExpenseDrawer({ onExpenseAdded }: ExpenseDrawerProps) {
@@ -33,7 +33,6 @@ export default function ExpenseDrawer({ onExpenseAdded }: ExpenseDrawerProps) {
     const [selectedPaymentMode, setPaymentMode] = React.useState<PaymentModeType>(PaymentModeType.CASH);
     const { user } = useUser();
     const { addExpense } = useAddExpense();
-    const { fetchSummary } = useSummary();
 
     const expenseCategories: ExpenseCategory[] = [
         { id: 1, label: "Food & Dining", type: "EXPENSE" },
@@ -46,7 +45,7 @@ export default function ExpenseDrawer({ onExpenseAdded }: ExpenseDrawerProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const optimisticExpense: Expense = {
+        const optimisticExpense = {
             id: Date.now(),
             amount,
             comment,
@@ -56,15 +55,17 @@ export default function ExpenseDrawer({ onExpenseAdded }: ExpenseDrawerProps) {
             paymentMode: selectedPaymentMode,
         };
 
+        onExpenseAdded(optimisticExpense); // Optimistically update the summary
+
         try {
             await addExpense(optimisticExpense);
-            onExpenseAdded(); // Refresh data
         } catch (error) {
             console.error("Error submitting expense:", error);
         }
 
         setOpen(false);
     };
+
 
     return (
         <Drawer open={open} onOpenChange={setOpen}>
