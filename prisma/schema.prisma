@@ -35,8 +35,8 @@ model Category {
     userId String // User to whom the category belongs
     type   TransactionType // Transaction type (INCOME or EXPENSE)
 
-    user         User          @relation(fields: [userId], references: [id])
-    transactions Transaction[] @relation("CategoryTransactions") // Categories related to transactions
+    user        User          @relation(fields: [userId], references: [id])
+    Transaction Transaction[] @relation("CategoryTransactions") // All transactions for the category
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
