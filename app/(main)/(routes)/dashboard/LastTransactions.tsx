@@ -1,27 +1,14 @@
+// components/LastTransactions.tsx
 "use client";
 
 import React from "react";
-import useSWR from "swr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-
-interface Transaction {
-    id: number;
-    amount: number;
-    category: { name: string }; // Assuming category object has `label`
-    paymentMode: string;
-    date: string; // ISO format
-}
-
-async function fetcher(url: string) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Failed to fetch");
-    return res.json();
-}
+import { useTransactions } from "@/app/hooks/useTransactions";
 
 export default function LastTransactions() {
-    const { data, error, isLoading } = useSWR<Transaction[]>("/api/transaction", fetcher);
+    const { transactions, error, isLoading } = useTransactions();
 
     if (isLoading) return <p>Loading...</p>;
     if (error) return <p>Error fetching transactions: {error.message}</p>;
@@ -42,12 +29,10 @@ export default function LastTransactions() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {data && data.map((transaction) => (
+                        {transactions.map((transaction) => (
                             <TableRow key={transaction.id}>
                                 <TableCell>
-                                    <Badge
-                                        variant={transaction.amount > 0 ? "default" : "destructive"}
-                                    >
+                                    <Badge>
                                         {transaction.amount > 0 ? "+" : ""}
                                         {transaction.amount}
                                     </Badge>
