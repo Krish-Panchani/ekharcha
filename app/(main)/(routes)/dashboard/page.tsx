@@ -5,6 +5,7 @@ import ExpenseDrawer from "./expence-drawer";
 import IncomeDrawer from "./income-drawer";
 import DashboardHeader from "./dashboard-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import from shadcn library
+import LastTransactions from "./LastTransactions";
 
 export default function DashboardPage() {
   const { summary, loading, error, mutate } = useSummary();
@@ -147,6 +148,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      <LastTransactions />
 
       <div className="fixed bottom-0 left-0 right-0 bg-gray-100 p-4 flex justify-center gap-4 shadow-md">
         <ExpenseDrawer onTransactionAdded={handleExpenseAdded} />
