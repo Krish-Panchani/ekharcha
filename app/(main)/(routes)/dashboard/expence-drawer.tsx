@@ -16,66 +16,68 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUser } from "@clerk/nextjs";
-import { useAddExpense } from "@/app/hooks/useAddExpense";
-import { useSummary } from "@/app/hooks/useSummary";
-import { PaymentModeType } from "@prisma/client";
-import { Expense, ExpenseCategory } from "@/app/types/types";
+import { PaymentModeType, Transaction, TransactionType } from "@prisma/client";
+import { useAddTransaction } from "@/app/hooks/hooks/useAddTransaction";
+// Import the TransactionType from your types
 
 interface ExpenseDrawerProps {
-    onExpenseAdded: (expense: Expense) => void;
+    onTransactionAdded: (transaction: Transaction) => void;
 }
 
-export default function ExpenseDrawer({ onExpenseAdded }: ExpenseDrawerProps) {
+export default function ExpenseDrawer({ onTransactionAdded }: ExpenseDrawerProps) {
     const [open, setOpen] = React.useState(false);
     const [amount, setAmount] = React.useState<number>(0);
     const [comment, setComment] = React.useState<string>("");
     const [selectedCategory, setCategory] = React.useState<number>(1);
     const [selectedPaymentMode, setPaymentMode] = React.useState<PaymentModeType>(PaymentModeType.CASH);
+    const [transactionType, setTransactionType] = React.useState<TransactionType>(TransactionType.EXPENSE); // Add transaction type
     const { user } = useUser();
-    const { addExpense } = useAddExpense();
+    const { addTransaction } = useAddTransaction();
 
-    const expenseCategories: ExpenseCategory[] = [
-        { id: 1, label: "Food & Dining", type: "EXPENSE" },
-        { id: 2, label: "Petrol", type: "EXPENSE" },
-        { id: 3, label: "Recharge & Bills", type: "EXPENSE" },
-        { id: 4, label: "Traveling", type: "EXPENSE" },
-        { id: 5, label: "Gift", type: "EXPENSE" },
+    const expenseCategories: { id: number, label: string }[] = [
+        { id: 1, label: "Food & Dining" },
+        { id: 2, label: "Petrol" },
+        { id: 3, label: "Recharge & Bills" },
+        { id: 4, label: "Traveling" },
+        { id: 5, label: "Gift" },
     ];
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const optimisticExpense = {
-            id: Date.now(),
+        const optimisticTransaction = {
+            id: Date.now(), // Use Date.now() for optimistic ID
             amount,
             comment,
             date: new Date(),
             categoryId: selectedCategory,
-            userId: user?.id,
+            userId: user?.id || "",
             paymentMode: selectedPaymentMode,
+            type: TransactionType.EXPENSE, // Use selected transaction type (INCOME/EXPENSE)
+            createdAt: new Date(),
+            updatedAt: new Date(),
         };
 
-        onExpenseAdded(optimisticExpense); // Optimistically update the summary
+        onTransactionAdded(optimisticTransaction); // Optimistically update the summary
 
         try {
-            await addExpense(optimisticExpense);
+            await addTransaction(optimisticTransaction); // Call the addTransaction hook
         } catch (error) {
-            console.error("Error submitting expense:", error);
+            console.error("Error submitting transaction:", error);
         }
 
-        setOpen(false);
+        setOpen(false); // Close the drawer
     };
-
 
     return (
         <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
-                <Button variant="outline">Add Expense</Button>
+                <Button variant="outline">Add Transaction</Button>
             </DrawerTrigger>
             <DrawerContent>
                 <DrawerHeader>
-                    <DrawerTitle>Add Expense</DrawerTitle>
-                    <DrawerDescription>Enter expense details below.</DrawerDescription>
+                    <DrawerTitle>Add Transaction</DrawerTitle>
+                    <DrawerDescription>Enter transaction details below.</DrawerDescription>
                 </DrawerHeader>
                 <form onSubmit={handleSubmit} className="grid gap-4 px-4">
                     <div>
@@ -133,7 +135,27 @@ export default function ExpenseDrawer({ onExpenseAdded }: ExpenseDrawerProps) {
                         />
                     </div>
 
-                    <Button type="submit">Submit Expense</Button>
+                    {/* Dropdown to select transaction type (INCOME/EXPENSE) */}
+                    <div>
+                        <Label htmlFor="transactionType">Transaction Type</Label>
+                        <Select
+                            value={transactionType}
+                            onValueChange={(value) => setTransactionType(value as TransactionType)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select transaction type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Object.values(TransactionType).map((type) => (
+                                    <SelectItem key={type} value={type}>
+                                        {type}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <Button type="submit">Submit Transaction</Button>
                 </form>
                 <DrawerFooter>
                     <DrawerClose asChild>

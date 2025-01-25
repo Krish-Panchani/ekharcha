@@ -16,50 +16,55 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUser } from "@clerk/nextjs";
-import { useAddIncome } from "@/app/hooks/useAddIncome";
-import { useSummary } from "@/app/hooks/useSummary";
-import { Income, IncomeCategory } from "@/app/types/types";
+import { PaymentModeType, Transaction, TransactionType } from "@prisma/client";  // Unified transaction types
+import { useAddTransaction } from "@/app/hooks/hooks/useAddTransaction";
 
 interface IncomeDrawerProps {
-    onIncomeAdded: (income: Income) => void;
+    onTransactionAdded: (transaction: Transaction) => void;
 }
 
-export default function IncomeDrawer({ onIncomeAdded }: IncomeDrawerProps) {
+export default function IncomeDrawer({ onTransactionAdded }: IncomeDrawerProps) {
     const [open, setOpen] = React.useState(false);
     const [amount, setAmount] = React.useState<number>(0);
     const [comment, setComment] = React.useState<string>("");
-    const [selectedCategory, setCategory] = React.useState<number>(6); // Default category ID
+    const [selectedCategory, setCategory] = React.useState<number>(6); // Default category ID for "Salary"
+    const [selectedPaymentMode, setPaymentMode] = React.useState<PaymentModeType>(PaymentModeType.CASH); // Default payment mode
+    const [transactionType, setTransactionType] = React.useState<TransactionType>(TransactionType.INCOME);  // Fixed as INCOME by default
     const { user } = useUser();
-    const { addIncome } = useAddIncome();
+    const { addTransaction } = useAddTransaction();  // Using the new addTransaction hook
 
-    const incomeCategories: IncomeCategory[] = [
-        { id: 6, label: "Salary", type: "INCOME" },
-        { id: 7, label: "Friend", type: "INCOME" },
-        { id: 8, label: "Bonuses", type: "INCOME" },
-        { id: 9, label: "Gift", type: "INCOME" },
+    const incomeCategories: { id: number, label: string }[] = [
+        { id: 6, label: "Salary" },
+        { id: 7, label: "Friend" },
+        { id: 8, label: "Bonuses" },
+        { id: 9, label: "Gift" },
     ];
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const optimisticIncome = {
-            id: Date.now(),
+        const optimisticTransaction = {
+            id: Date.now(), // Use Date.now() for optimistic ID
             amount,
             comment,
             date: new Date(),
             categoryId: selectedCategory,
-            userId: user?.id,
+            userId: user?.id || "",
+            paymentMode: selectedPaymentMode,
+            type: TransactionType.INCOME,  // Ensure transaction type is "INCOME"
+            createdAt: new Date(),
+            updatedAt: new Date(),
         };
 
-        onIncomeAdded(optimisticIncome); // Optimistically update the summary
+        onTransactionAdded(optimisticTransaction); // Optimistically update the summary
 
         try {
-            await addIncome(optimisticIncome);
+            await addTransaction(optimisticTransaction);  // Call the new hook for adding transactions
         } catch (error) {
             console.error("Error submitting income:", error);
         }
 
-        setOpen(false);
+        setOpen(false);  // Close the drawer after submission
     };
 
     return (
@@ -94,6 +99,25 @@ export default function IncomeDrawer({ onIncomeAdded }: IncomeDrawerProps) {
                                 {incomeCategories.map((category) => (
                                     <SelectItem key={category.id} value={category.id.toString()}>
                                         {category.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div>
+                        <Label htmlFor="paymentMode">Payment Mode</Label>
+                        <Select
+                            value={selectedPaymentMode}
+                            onValueChange={(value) => setPaymentMode(value as PaymentModeType)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select payment mode" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Object.values(PaymentModeType).map((mode) => (
+                                    <SelectItem key={mode} value={mode}>
+                                        {mode}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
