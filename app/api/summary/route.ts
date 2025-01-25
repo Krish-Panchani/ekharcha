@@ -16,48 +16,51 @@ export async function GET(req: NextRequest) {
         const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-        const [dailyTransaction, weeklyTransaction, monthlyTransaction, totalTransaction] = await Promise.all([
-            db.transaction.aggregate({
+        // Fetch income and expense data for all periods in one query
+        const results = await Promise.all([
+            db.transaction.groupBy({
+                by: ["type"],
                 _sum: { amount: true },
                 where: { userId, date: { gte: startOfDay } },
             }),
-            db.transaction.aggregate({
+            db.transaction.groupBy({
+                by: ["type"],
                 _sum: { amount: true },
                 where: { userId, date: { gte: startOfWeek } },
             }),
-            db.transaction.aggregate({
+            db.transaction.groupBy({
+                by: ["type"],
                 _sum: { amount: true },
                 where: { userId, date: { gte: startOfMonth } },
             }),
-            db.transaction.aggregate({
+            db.transaction.groupBy({
+                by: ["type"],
                 _sum: { amount: true },
                 where: { userId },
             }),
         ]);
 
-        // Extract income and expense amounts, ensuring we don't apply filter to numbers
-        const dailyIncome = dailyTransaction._sum.amount && dailyTransaction._sum.amount > 0 ? dailyTransaction._sum.amount : 0;
-        const weeklyIncome = weeklyTransaction._sum.amount && weeklyTransaction._sum.amount > 0 ? weeklyTransaction._sum.amount : 0;
-        const monthlyIncome = monthlyTransaction._sum.amount && monthlyTransaction._sum.amount > 0 ? monthlyTransaction._sum.amount : 0;
-        const totalIncome = totalTransaction._sum.amount && totalTransaction._sum.amount > 0 ? totalTransaction._sum.amount : 0;
+        // Extract and format the data for each time period
+        const formatResults = (groupedResults: any) => {
+            const income = groupedResults.find((res: any) => res.type === "INCOME")?._sum.amount || 0;
+            const expense = groupedResults.find((res: any) => res.type === "EXPENSE")?._sum.amount || 0;
+            return { income, expense };
+        };
 
-        const dailyExpense = dailyTransaction._sum.amount && dailyTransaction._sum.amount < 0 ? dailyTransaction._sum.amount : 0;
-        const weeklyExpense = weeklyTransaction._sum.amount && weeklyTransaction._sum.amount < 0 ? weeklyTransaction._sum.amount : 0;
-        const monthlyExpense = monthlyTransaction._sum.amount && monthlyTransaction._sum.amount < 0 ? monthlyTransaction._sum.amount : 0;
-        const totalExpense = totalTransaction._sum.amount && totalTransaction._sum.amount < 0 ? totalTransaction._sum.amount : 0;
+        const [daily, weekly, monthly, total] = results.map(formatResults);
 
         return NextResponse.json({
             income: {
-                daily: dailyIncome || 0,
-                weekly: weeklyIncome || 0,
-                monthly: monthlyIncome || 0,
-                total: totalIncome || 0,
+                daily: daily.income,
+                weekly: weekly.income,
+                monthly: monthly.income,
+                total: total.income,
             },
             expense: {
-                daily: dailyExpense || 0,
-                weekly: weeklyExpense || 0,
-                monthly: monthlyExpense || 0,
-                total: totalExpense || 0,
+                daily: daily.expense,
+                weekly: weekly.expense,
+                monthly: monthly.expense,
+                total: total.expense,
             },
         });
     } catch (error) {
