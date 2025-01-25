@@ -16,43 +16,50 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUser } from "@clerk/nextjs";
-import { PaymentModeType } from "@prisma/client";
-import { useAddExpense } from "@/app/hooks/useAddExpense";
 import { useAddIncome } from "@/app/hooks/useAddIncome";
+import { useSummary } from "@/app/hooks/useSummary";
+import { Income, IncomeCategory } from "@/app/types/types";
 
-export default function IncomeDrawer({ onIncomeAdded }: { onIncomeAdded: () => void }) {
+interface IncomeDrawerProps {
+    onIncomeAdded: () => void;
+}
+
+export default function IncomeDrawer({ onIncomeAdded }: IncomeDrawerProps) {
     const [open, setOpen] = React.useState(false);
-    const [amount, setAmount] = React.useState(0);
-    const [comment, setComment] = React.useState("");
-    const [selectedCategory, setCategory] = React.useState(1); // Default to the first category
-    const date = new Date();
+    const [amount, setAmount] = React.useState<number>(0);
+    const [comment, setComment] = React.useState<string>("");
+    const [selectedCategory, setCategory] = React.useState<number>(6); // Default category ID
     const { user } = useUser();
     const { addIncome } = useAddIncome();
+    const { fetchSummary } = useSummary();
 
-    const expenseCategories = [
-        { id: 1, label: "Food & Dining", type: "EXPENSE" },
-        { id: 2, label: "Petrol", type: "EXPENSE" },
-        { id: 3, label: "Recharge & Bills", type: "EXPENSE" },
-        { id: 4, label: "Travelling", type: "EXPENSE" },
-        { id: 5, label: "Gift", type: "EXPENSE" },
+    const incomeCategories: IncomeCategory[] = [
+        { id: 6, label: "Salary", type: "INCOME" },
+        { id: 7, label: "Friend", type: "INCOME" },
+        { id: 8, label: "Bonuses", type: "INCOME" },
+        { id: 9, label: "Gift", type: "INCOME" },
     ];
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const incomeData = {
+
+        const optimisticIncome: Income = {
+            id: Date.now(),
             amount,
             comment,
-            date,
+            date: new Date(),
             categoryId: selectedCategory,
-            userId: user?.id || "",
+            userId: user?.id,
         };
+
         try {
-            await addIncome(incomeData); // Use the hook
-            onIncomeAdded(); // Trigger summary refresh
-            setOpen(false); // Close the drawer
+            await addIncome(optimisticIncome);
+            onIncomeAdded(); // Refresh data
         } catch (error) {
-            console.error("Error submitting expense:", error);
+            console.error("Error submitting income:", error);
         }
+
+        setOpen(false);
     };
 
     return (
@@ -61,14 +68,12 @@ export default function IncomeDrawer({ onIncomeAdded }: { onIncomeAdded: () => v
                 <Button variant="outline">Add Income</Button>
             </DrawerTrigger>
             <DrawerContent>
-                <DrawerHeader className="text-left">
+                <DrawerHeader>
                     <DrawerTitle>Add Income</DrawerTitle>
-                    <DrawerDescription>
-                        Enter your expense details and submit when you're ready.
-                    </DrawerDescription>
+                    <DrawerDescription>Enter income details below.</DrawerDescription>
                 </DrawerHeader>
-                <form onSubmit={handleSubmit} className="grid items-start gap-4 px-4">
-                    <div className="grid gap-2">
+                <form onSubmit={handleSubmit} className="grid gap-4 px-4">
+                    <div>
                         <Label htmlFor="amount">Amount</Label>
                         <Input
                             type="number"
@@ -79,17 +84,14 @@ export default function IncomeDrawer({ onIncomeAdded }: { onIncomeAdded: () => v
                         />
                     </div>
 
-                    <div className="grid gap-2">
+                    <div>
                         <Label htmlFor="category">Category</Label>
-                        <Select
-                            value={selectedCategory.toString()}
-                            onValueChange={(value) => setCategory(Number(value))}
-                        >
-                            <SelectTrigger id="category">
+                        <Select value={selectedCategory.toString()} onValueChange={(value) => setCategory(Number(value))}>
+                            <SelectTrigger>
                                 <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                             <SelectContent>
-                                {expenseCategories.map((category) => (
+                                {incomeCategories.map((category) => (
                                     <SelectItem key={category.id} value={category.id.toString()}>
                                         {category.label}
                                     </SelectItem>
@@ -98,9 +100,7 @@ export default function IncomeDrawer({ onIncomeAdded }: { onIncomeAdded: () => v
                         </Select>
                     </div>
 
-
-
-                    <div className="grid gap-2">
+                    <div>
                         <Label htmlFor="comment">Comment</Label>
                         <Textarea
                             id="comment"
