@@ -1,15 +1,8 @@
 import axios from "axios";
-
-interface IncomeData {
-    amount: number;
-    comment: string;
-    date: Date;
-    categoryId: number;
-    userId: string;
-}
+import { Income } from "../types/types";
 
 export const useAddIncome = () => {
-    const addIncome = async (data: IncomeData) => {
+    const addIncome = async (data: Income) => {
         try {
             await axios.post("/api/income", data);
             console.log("Income added successfully");

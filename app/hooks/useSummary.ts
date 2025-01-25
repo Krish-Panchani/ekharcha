@@ -1,20 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-
-export interface Summary {
-    income: {
-        daily: number;
-        weekly: number;
-        monthly: number;
-        total: number;
-    };
-    expense: {
-        daily: number;
-        weekly: number;
-        monthly: number;
-        total: number;
-    };
-}
+import { Summary } from "../types/types";
 
 export const useSummary = () => {
     const [summary, setSummary] = useState<Summary | null>(null);

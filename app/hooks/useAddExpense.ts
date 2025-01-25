@@ -1,16 +1,8 @@
 import axios from "axios";
-
-interface ExpenseData {
-    amount: number;
-    comment: string;
-    date: Date;
-    categoryId: number;
-    userId: string;
-    paymentMode: string; // Or PaymentModeType if you use the enum
-}
+import { Expense } from "../types/types";
 
 export const useAddExpense = () => {
-    const addExpense = async (data: ExpenseData) => {
+    const addExpense = async (data: Expense) => {
         try {
             await axios.post("/api/expense", data);
             console.log("Expense added successfully");
