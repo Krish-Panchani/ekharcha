@@ -136,7 +136,7 @@ export default function ExpenseDrawer({ onTransactionAdded }: ExpenseDrawerProps
                     </div>
 
                     {/* Dropdown to select transaction type (INCOME/EXPENSE) */}
-                    <div>
+                    {/* <div>
                         <Label htmlFor="transactionType">Transaction Type</Label>
                         <Select
                             value={transactionType}
@@ -153,7 +153,7 @@ export default function ExpenseDrawer({ onTransactionAdded }: ExpenseDrawerProps
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
+                    </div> */}
 
                     <Button type="submit">Submit Transaction</Button>
                 </form>
