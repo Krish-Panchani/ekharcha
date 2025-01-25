@@ -30,16 +30,18 @@ export default function PeriodBalance({
                 <h3 className="text-sm font-semibold">
                     {selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)}
                 </h3>
-                <Select value={selectedPeriod} onValueChange={onPeriodChange}>
-                    <SelectTrigger className="btn border rounded-lg p-2">
-                        <SelectValue placeholder="Select Period" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="daily">Today</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                    </SelectContent>
-                </Select>
+                <div>
+                    <Select value={selectedPeriod} onValueChange={onPeriodChange}>
+                        <SelectTrigger className="btn border rounded-lg p-2">
+                            <SelectValue placeholder="Select Period" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="daily">Today</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
             <div className="flex flex-col">
                 <div className="flex gap-4 items-center px-4">
