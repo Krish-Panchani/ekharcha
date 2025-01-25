@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { getAuth } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
     try {
@@ -11,70 +11,53 @@ export async function GET(req: NextRequest) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        console.log("[SUMMARY_GET] User ID:", userId);
-
         const today = new Date();
         const startOfDay = new Date(today.setHours(0, 0, 0, 0));
         const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-        console.log("[SUMMARY_GET] Date Ranges:", { startOfDay, startOfWeek, startOfMonth });
-
-        // Fetch incomes and expenses grouped by time periods
-        const [dailyIncome, weeklyIncome, monthlyIncome, totalIncome] = await Promise.all([
-            db.income.aggregate({
+        const [dailyTransaction, weeklyTransaction, monthlyTransaction, totalTransaction] = await Promise.all([
+            db.transaction.aggregate({
                 _sum: { amount: true },
                 where: { userId, date: { gte: startOfDay } },
             }),
-            db.income.aggregate({
+            db.transaction.aggregate({
                 _sum: { amount: true },
                 where: { userId, date: { gte: startOfWeek } },
             }),
-            db.income.aggregate({
+            db.transaction.aggregate({
                 _sum: { amount: true },
                 where: { userId, date: { gte: startOfMonth } },
             }),
-            db.income.aggregate({
+            db.transaction.aggregate({
                 _sum: { amount: true },
                 where: { userId },
             }),
         ]);
 
-        console.log("[SUMMARY_GET] Income Data:", { dailyIncome, weeklyIncome, monthlyIncome, totalIncome });
+        // Extract income and expense amounts, ensuring we don't apply filter to numbers
+        const dailyIncome = dailyTransaction._sum.amount && dailyTransaction._sum.amount > 0 ? dailyTransaction._sum.amount : 0;
+        const weeklyIncome = weeklyTransaction._sum.amount && weeklyTransaction._sum.amount > 0 ? weeklyTransaction._sum.amount : 0;
+        const monthlyIncome = monthlyTransaction._sum.amount && monthlyTransaction._sum.amount > 0 ? monthlyTransaction._sum.amount : 0;
+        const totalIncome = totalTransaction._sum.amount && totalTransaction._sum.amount > 0 ? totalTransaction._sum.amount : 0;
 
-        const [dailyExpense, weeklyExpense, monthlyExpense, totalExpense] = await Promise.all([
-            db.expense.aggregate({
-                _sum: { amount: true },
-                where: { userId, date: { gte: startOfDay } },
-            }),
-            db.expense.aggregate({
-                _sum: { amount: true },
-                where: { userId, date: { gte: startOfWeek } },
-            }),
-            db.expense.aggregate({
-                _sum: { amount: true },
-                where: { userId, date: { gte: startOfMonth } },
-            }),
-            db.expense.aggregate({
-                _sum: { amount: true },
-                where: { userId },
-            }),
-        ]);
-
-        console.log("[SUMMARY_GET] Expense Data:", { dailyExpense, weeklyExpense, monthlyExpense, totalExpense });
+        const dailyExpense = dailyTransaction._sum.amount && dailyTransaction._sum.amount < 0 ? dailyTransaction._sum.amount : 0;
+        const weeklyExpense = weeklyTransaction._sum.amount && weeklyTransaction._sum.amount < 0 ? weeklyTransaction._sum.amount : 0;
+        const monthlyExpense = monthlyTransaction._sum.amount && monthlyTransaction._sum.amount < 0 ? monthlyTransaction._sum.amount : 0;
+        const totalExpense = totalTransaction._sum.amount && totalTransaction._sum.amount < 0 ? totalTransaction._sum.amount : 0;
 
         return NextResponse.json({
             income: {
-                daily: dailyIncome._sum.amount || 0,
-                weekly: weeklyIncome._sum.amount || 0,
-                monthly: monthlyIncome._sum.amount || 0,
-                total: totalIncome._sum.amount || 0,
+                daily: dailyIncome || 0,
+                weekly: weeklyIncome || 0,
+                monthly: monthlyIncome || 0,
+                total: totalIncome || 0,
             },
             expense: {
-                daily: dailyExpense._sum.amount || 0,
-                weekly: weeklyExpense._sum.amount || 0,
-                monthly: monthlyExpense._sum.amount || 0,
-                total: totalExpense._sum.amount || 0,
+                daily: dailyExpense || 0,
+                weekly: weeklyExpense || 0,
+                monthly: monthlyExpense || 0,
+                total: totalExpense || 0,
             },
         });
     } catch (error) {
