@@ -14,8 +14,9 @@ export const useSummary = () => {
             const response = await axios.get("/api/summary");
             setSummary(response.data);
         } catch (err) {
+            console.error("Error fetching summary data:", err);
+            setSummary({ expense: { daily: 0, weekly: 0, monthly: 0, total: 0 }, income: { daily: 0, weekly: 0, monthly: 0, total: 0 } }); // Default fallback
             setError("Failed to fetch summary data.");
-            console.error(err);
         } finally {
             setLoading(false);
         }
