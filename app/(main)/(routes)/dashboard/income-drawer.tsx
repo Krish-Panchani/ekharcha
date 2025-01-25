@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUser } from "@clerk/nextjs";
 import { PaymentModeType, Transaction, TransactionType } from "@prisma/client";  // Unified transaction types
-import { useAddTransaction } from "@/app/hooks/hooks/useAddTransaction";
+import { useAddTransaction } from "@/app/hooks/useAddTransaction";
 
 interface IncomeDrawerProps {
     onTransactionAdded: (transaction: Transaction) => void;

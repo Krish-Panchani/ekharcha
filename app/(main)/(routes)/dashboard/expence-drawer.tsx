@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUser } from "@clerk/nextjs";
 import { PaymentModeType, Transaction, TransactionType } from "@prisma/client";
-import { useAddTransaction } from "@/app/hooks/hooks/useAddTransaction";
+import { useAddTransaction } from "@/app/hooks/useAddTransaction";
 // Import the TransactionType from your types
 
 interface ExpenseDrawerProps {
@@ -72,7 +72,7 @@ export default function ExpenseDrawer({ onTransactionAdded }: ExpenseDrawerProps
     return (
         <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
-                <Button variant="outline">Add Transaction</Button>
+                <Button variant="outline">Add Expense</Button>
             </DrawerTrigger>
             <DrawerContent>
                 <DrawerHeader>
