@@ -1,25 +1,18 @@
-import { PaymentModeType } from "@prisma/client";
+import { PaymentModeType, TransactionType,  } from "@prisma/client";
 
-
-export interface Expense {
+// Unified Transaction type
+export interface Transaction {
     id: number;
     amount: number;
-    comment: string;
+    comment?: string; // Optional comment
     date: Date;
     categoryId: number;
     userId: string | undefined;
-    paymentMode: PaymentModeType;
+    type: TransactionType; // INCOME or EXPENSE
+    paymentMode: PaymentModeType; // UPI, CASH, WALLET, or CARD
 }
 
-export interface Income {
-    id: number;
-    amount: number;
-    comment: string;
-    date: Date;
-    categoryId: number;
-    userId: string | undefined;
-}
-
+// Summary interface for daily, weekly, monthly, and total income/expense
 export interface Summary {
     income: {
         daily: number;
@@ -35,14 +28,11 @@ export interface Summary {
     };
 }
 
-export interface ExpenseCategory {
+// Category interface for both income and expense categories
+export interface Category {
     id: number;
     label: string;
-    type: "EXPENSE";
+    type: TransactionType; // INCOME or EXPENSE
 }
 
-export interface IncomeCategory {
-    id: number;
-    label: string;
-    type: "INCOME";
-}
+// You can now have a unified model for transactions without having separate Expense and Income models
