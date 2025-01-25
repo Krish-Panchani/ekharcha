@@ -7,13 +7,18 @@ export async function GET(req: NextRequest) {
         const { userId } = getAuth(req);
 
         if (!userId) {
+            console.error("[SUMMARY_GET] Unauthorized access attempt.");
             return new NextResponse("Unauthorized", { status: 401 });
         }
+
+        console.log("[SUMMARY_GET] User ID:", userId);
 
         const today = new Date();
         const startOfDay = new Date(today.setHours(0, 0, 0, 0));
         const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        console.log("[SUMMARY_GET] Date Ranges:", { startOfDay, startOfWeek, startOfMonth });
 
         // Fetch incomes and expenses grouped by time periods
         const [dailyIncome, weeklyIncome, monthlyIncome, totalIncome] = await Promise.all([
@@ -35,6 +40,8 @@ export async function GET(req: NextRequest) {
             }),
         ]);
 
+        console.log("[SUMMARY_GET] Income Data:", { dailyIncome, weeklyIncome, monthlyIncome, totalIncome });
+
         const [dailyExpense, weeklyExpense, monthlyExpense, totalExpense] = await Promise.all([
             db.expense.aggregate({
                 _sum: { amount: true },
@@ -54,6 +61,8 @@ export async function GET(req: NextRequest) {
             }),
         ]);
 
+        console.log("[SUMMARY_GET] Expense Data:", { dailyExpense, weeklyExpense, monthlyExpense, totalExpense });
+
         return NextResponse.json({
             income: {
                 daily: dailyIncome._sum.amount || 0,
@@ -69,7 +78,7 @@ export async function GET(req: NextRequest) {
             },
         });
     } catch (error) {
-        console.error("[SUMMARY_GET]", error);
+        console.error("[SUMMARY_GET] Internal Error:", error);
         return new NextResponse("Internal server error", { status: 500 });
     }
 }
