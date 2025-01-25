@@ -39,3 +39,28 @@ export async function POST(req: NextRequest) {
         return new NextResponse("Internal server error", { status: 500 });
     }
 }
+
+export async function GET(req: NextRequest) {
+    try {
+        const { userId } = getAuth(req);
+
+        if (!userId) {
+            console.error("[TRANSACTIONS_GET] Unauthorized access attempt.");
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const transactions = await db.transaction.findMany({
+            where: { userId },
+            orderBy: { date: "desc" },
+            take: 10,
+            include: {
+                category: true, // Ensure category details are included if referenced
+            },
+        });
+
+        return NextResponse.json(transactions);
+    } catch (error) {
+        console.error("[TRANSACTIONS_GET] Internal Error:", error);
+        return new NextResponse("Internal server error", { status: 500 });
+    }
+}
