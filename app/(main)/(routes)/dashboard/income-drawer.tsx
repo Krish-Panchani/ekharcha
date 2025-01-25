@@ -21,7 +21,7 @@ import { useSummary } from "@/app/hooks/useSummary";
 import { Income, IncomeCategory } from "@/app/types/types";
 
 interface IncomeDrawerProps {
-    onIncomeAdded: () => void;
+    onIncomeAdded: (income: Income) => void;
 }
 
 export default function IncomeDrawer({ onIncomeAdded }: IncomeDrawerProps) {
@@ -31,7 +31,6 @@ export default function IncomeDrawer({ onIncomeAdded }: IncomeDrawerProps) {
     const [selectedCategory, setCategory] = React.useState<number>(6); // Default category ID
     const { user } = useUser();
     const { addIncome } = useAddIncome();
-    const { fetchSummary } = useSummary();
 
     const incomeCategories: IncomeCategory[] = [
         { id: 6, label: "Salary", type: "INCOME" },
@@ -43,7 +42,7 @@ export default function IncomeDrawer({ onIncomeAdded }: IncomeDrawerProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const optimisticIncome: Income = {
+        const optimisticIncome = {
             id: Date.now(),
             amount,
             comment,
@@ -52,9 +51,10 @@ export default function IncomeDrawer({ onIncomeAdded }: IncomeDrawerProps) {
             userId: user?.id,
         };
 
+        onIncomeAdded(optimisticIncome); // Optimistically update the summary
+
         try {
             await addIncome(optimisticIncome);
-            onIncomeAdded(); // Refresh data
         } catch (error) {
             console.error("Error submitting income:", error);
         }
