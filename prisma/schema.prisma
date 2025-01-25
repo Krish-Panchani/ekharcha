@@ -19,9 +19,9 @@ model User {
     firstName    String?
     lastName     String?
 
-    expenses   Expense[]  @relation("UserExpenses")
-    incomes    Income[]   @relation("UserIncomes")
-    categories Category[]
+    // transactions Transaction[] @relation("UserTransactions") // All transactions for the user
+    categories  Category[] // User's categories for transactions
+    Transaction Transaction[] @relation("UserTransactions") // All transactions for the user
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -31,24 +31,24 @@ model User {
 model Category {
     id Int @id @default(autoincrement())
 
-    name   String
-    type   CategoryType
-    userId String
+    name   String // Category name (e.g., "Groceries", "Salary")
+    userId String // User to whom the category belongs
+    type   TransactionType // Transaction type (INCOME or EXPENSE)
 
-    user     User      @relation(fields: [userId], references: [id])
-    expenses Expense[] @relation("CategoryExpenses")
-    incomes  Income[]  @relation("CategoryIncomes")
+    user         User          @relation(fields: [userId], references: [id])
+    transactions Transaction[] @relation("CategoryTransactions") // Categories related to transactions
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
 
-// Enum to distinguish between Expense and Income categories
-enum CategoryType {
-    EXPENSE
+// Enum to distinguish between transaction types (Income vs Expense)
+enum TransactionType {
     INCOME
+    EXPENSE
 }
 
+// Enum to define payment methods
 enum PaymentModeType {
     UPI
     CASH
@@ -56,36 +56,20 @@ enum PaymentModeType {
     CARD
 }
 
-// Expense model for tracking expenses
-model Expense {
+// Transaction model for tracking both income and expenses
+model Transaction {
     id Int @id @default(autoincrement())
 
-    amount      Float // Amount spent
+    amount      Float // Amount of the transaction
     comment     String? // Optional comment
     date        DateTime
     categoryId  Int
     userId      String
+    type        TransactionType // Type of transaction (INCOME or EXPENSE)
     paymentMode PaymentModeType @default(UPI)
 
-    category Category @relation("CategoryExpenses", fields: [categoryId], references: [id])
-    user     User     @relation("UserExpenses", fields: [userId], references: [id])
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-}
-
-// Income model for tracking income
-model Income {
-    id Int @id @default(autoincrement())
-
-    amount     Float // Amount received
-    comment    String? // Optional comment
-    date       DateTime
-    categoryId Int
-    userId     String
-
-    category Category @relation("CategoryIncomes", fields: [categoryId], references: [id])
-    user     User     @relation("UserIncomes", fields: [userId], references: [id])
+    category Category @relation("CategoryTransactions", fields: [categoryId], references: [id])
+    user     User     @relation("UserTransactions", fields: [userId], references: [id])
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
