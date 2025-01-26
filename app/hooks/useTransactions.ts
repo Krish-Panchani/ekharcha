@@ -1,43 +1,80 @@
-// hooks/useTransactions.ts
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 
 interface Transaction {
-    id: number;
-    amount: number;
-    category: { name: string };
-    paymentMode: string;
-    date: string;
+  id: number;
+  amount: number;
+  type: string;
+  category: { name: string };
+  paymentMode: string;
+  date: string;
 }
 
 async function fetcher(url: string) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Failed to fetch");
-    return res.json();
+  const res = await fetch(url);
+  if (!res.ok) {
+    const errorBody = await res.json();
+    throw new Error(errorBody?.message || "Failed to fetch data.");
+  }
+  return res.json();
 }
 
 export function useTransactions() {
-    const { data, error, mutate } = useSWR<Transaction[]>("/api/transaction", fetcher);
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [skip, setSkip] = useState(0);
+  const take = 10;
 
-    // Update local state when data changes
-    useEffect(() => {
-        if (data) {
-            setTransactions(data.slice(0, 10)); // Only take the last 10 transactions
-        }
-    }, [data]);
+  const { data, error, mutate } = useSWR<Transaction[]>(
+    `/api/transaction?skip=${skip}&take=${take}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
+  );
 
-     // Add transaction locally and also trigger SWR mutate
-     const addTransaction = (newTransaction: Transaction) => {
-        setTransactions((prevTransactions) => [newTransaction, ...prevTransactions.slice(0, 9)]);
-        mutate(undefined, { revalidate: false }); // Disable revalidation here
-    };
+  // Load initial transactions
+  useEffect(() => {
+    if (data) {
+      setTransactions(data);
+      setSkip(data.length);
+      if (data.length < take) setHasMore(false);
+    }
+  }, [data]);
 
-    return {
-        transactions,
-        error,
-        isLoading: !data && !error,
-        addTransaction,
-        mutate, // Allow the parent to manually trigger re-fetch if needed
-    };
+  // Add a new transaction
+  const addTransaction = (newTransaction: Transaction) => {
+    setTransactions((prev) => [newTransaction, ...prev]);
+    mutate(); // Revalidate transactions from the API after updating locally
+  };
+
+  // Load more transactions
+  const loadMore = async () => {
+    if (!hasMore || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+
+    try {
+      const newTransactions = await fetcher(`/api/transaction?skip=${skip}&take=${take}`);
+      setTransactions((prev) => [...prev, ...newTransactions]);
+      setSkip((prev) => prev + newTransactions.length);
+      if (newTransactions.length < take) setHasMore(false);
+    } catch (err) {
+      console.error("Error loading more transactions:", err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  return {
+    transactions,
+    error,
+    isLoading: !data && !error,
+    loadMore,
+    isLoadingMore,
+    hasMore,
+    addTransaction,
+  };
 }
