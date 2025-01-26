@@ -53,8 +53,17 @@ export async function GET(req: NextRequest) {
             where: { userId },
             orderBy: { date: "desc" },
             take: 10,
-            include: {
-                category: true, // Ensure category details are included if referenced
+            select: {
+                id: true,
+                amount: true,
+                type: true,
+                paymentMode: true,
+                date: true,
+                category: {
+                    select: {
+                        name: true, // Only select the category name
+                    },
+                },
             },
         });
 
