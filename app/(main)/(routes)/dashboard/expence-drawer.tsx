@@ -22,9 +22,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUser } from "@clerk/nextjs";
-import { PaymentModeType, Transaction, TransactionType } from "@prisma/client";
+import { PaymentMode, TransactionType } from "@prisma/client";
 import { useAddTransaction } from "@/app/hooks/useAddTransaction";
-// Import the TransactionType from your types
+import {
+  RecurringInterval,
+  Transaction,
+  TransactionStatus,
+} from "@/app/types/types";
 
 interface ExpenseDrawerProps {
   onTransactionAdded: (transaction: Transaction) => void;
@@ -35,15 +39,14 @@ export default function ExpenseDrawer({
 }: ExpenseDrawerProps) {
   const [open, setOpen] = React.useState(false);
   const [amount, setAmount] = React.useState<number>(0);
-  const [comment, setComment] = React.useState<string>("");
-  const [selectedCategory, setCategory] = React.useState<number>(1);
-  const [selectedPaymentMode, setPaymentMode] = React.useState<PaymentModeType>(
-    PaymentModeType.UPI
+  const [description, setDescription] = React.useState<string>("");
+  const [selectedCategory, setCategory] =
+    React.useState<string>("Food & Dining");
+  const [selectedPaymentMode, setPaymentMode] = React.useState<PaymentMode>(
+    PaymentMode.UPI
   );
-  const [transactionType, setTransactionType] = React.useState<TransactionType>(
-    TransactionType.EXPENSE
-  ); // Add transaction type
-  const { user } = useUser();
+
+  // const { user } = useUser();
   const { addTransaction } = useAddTransaction();
 
   const expenseCategories: { id: number; label: string }[] = [
@@ -57,28 +60,39 @@ export default function ExpenseDrawer({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const optimisticTransaction = {
-      id: Date.now(), // Use Date.now() for optimistic ID
+    const optimisticTransaction: Transaction = {
       amount,
-      comment,
-      date: new Date(),
-      categoryId: selectedCategory,
-      userId: user?.id || "",
+      description,
+      date: new Date(), // Add the current date as the date of the transaction
+      category: selectedCategory,
+      receiptUrl: "",
       paymentMode: selectedPaymentMode,
-      type: TransactionType.EXPENSE, // Use selected transaction type (INCOME/EXPENSE)
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      type: TransactionType.EXPENSE,
+      status: TransactionStatus.COMPLETED,
+      isRecurring: false,
+      recurringInterval: null,
+      nextRecurringDate: null,
+      lastProcessedDate: null,
     };
 
-    onTransactionAdded(optimisticTransaction); // Optimistically update the summary
+    onTransactionAdded(optimisticTransaction);
+    setOpen(false);
 
     try {
-      await addTransaction(optimisticTransaction); // Call the addTransaction hook
+      // Sending transaction data to the backend API
+      await addTransaction({
+        amount,
+        description,
+        date: new Date(),
+        category: selectedCategory,
+        paymentMode: selectedPaymentMode,
+        type: TransactionType.EXPENSE,
+        status: TransactionStatus.COMPLETED,
+        isRecurring: false,
+      });
     } catch (error) {
       console.error("Error submitting transaction:", error);
     }
-
-    setOpen(false); // Close the drawer
   };
 
   return (
@@ -109,15 +123,15 @@ export default function ExpenseDrawer({
           <div>
             <Label htmlFor="category">Category</Label>
             <Select
-              value={selectedCategory.toString()}
-              onValueChange={(value) => setCategory(Number(value))}
+              value={selectedCategory}
+              onValueChange={(value) => setCategory(value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
                 {expenseCategories.map((category) => (
-                  <SelectItem key={category.id} value={category.id.toString()}>
+                  <SelectItem key={category.id} value={category.label}>
                     {category.label}
                   </SelectItem>
                 ))}
@@ -129,15 +143,13 @@ export default function ExpenseDrawer({
             <Label htmlFor="paymentMode">Payment Mode</Label>
             <Select
               value={selectedPaymentMode}
-              onValueChange={(value) =>
-                setPaymentMode(value as PaymentModeType)
-              }
+              onValueChange={(value) => setPaymentMode(value as PaymentMode)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select payment mode" />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(PaymentModeType).map((mode) => (
+                {Object.values(PaymentMode).map((mode) => (
                   <SelectItem key={mode} value={mode}>
                     {mode}
                   </SelectItem>
@@ -151,31 +163,11 @@ export default function ExpenseDrawer({
             <Textarea
               id="comment"
               placeholder="Optional comment"
-              onChange={(e) => setComment(e.target.value)}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
-          {/* Dropdown to select transaction type (INCOME/EXPENSE) */}
-          {/* <div>
-                        <Label htmlFor="transactionType">Transaction Type</Label>
-                        <Select
-                            value={transactionType}
-                            onValueChange={(value) => setTransactionType(value as TransactionType)}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select transaction type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Object.values(TransactionType).map((type) => (
-                                    <SelectItem key={type} value={type}>
-                                        {type}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div> */}
-
-          <Button type="submit">Add Expence</Button>
+          <Button type="submit">Add Expense</Button>
         </form>
         <DrawerFooter>
           <DrawerClose asChild>
