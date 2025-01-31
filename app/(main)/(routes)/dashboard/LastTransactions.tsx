@@ -32,7 +32,7 @@ export default function LastTransactions() {
               >
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-800">
-                    {transaction.category.name}
+                    {transaction.category}
                   </span>
                   <span className="text-xs text-gray-500">
                     {new Date(transaction.date).toLocaleDateString("en-GB", {
