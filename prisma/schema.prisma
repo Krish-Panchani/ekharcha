@@ -1,76 +1,120 @@
-// Define the datasource and generator
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL") // The connection string will be read from an environment variable
+    provider  = "postgresql"
+    url       = env("DATABASE_URL") // The connection string will be read from an environment variable
+    directUrl = env("DIRECT_URL")
 }
 
 generator client {
     provider = "prisma-client-js" // Prisma's client for JS/TS
 }
 
-// Define the models
-
-// User model for handling users
+// User model with necessary relations to accounts, transactions, and budgets
 model User {
-    id String @id @default(cuid())
-
-    emailAddress String  @unique
-    imageUrl     String?
+    id           String        @id @default(uuid())
+    clerkUserId  String        @unique
+    emailAddress String        @unique
     firstName    String?
     lastName     String?
+    imageUrl     String?
+    accountLimit Int           @default(2) // Account limit for the user (default 2)
+    transactions Transaction[]
+    accounts     Account[]
+    budget       Budget[]
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
 
-    // transactions Transaction[] @relation("UserTransactions") // All transactions for the user
-    categories  Category[] // User's categories for transactions
-    Transaction Transaction[] @relation("UserTransactions") // All transactions for the user
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    @@map("users")
 }
 
-// Category model for managing user-defined categories
-model Category {
-    id Int @id @default(autoincrement())
+// Account model where each user can have multiple accounts, with one being the default account
+model Account {
+    id           String        @id @default(uuid())
+    name         String
+    type         AccountType
+    balance      Float         @default(0)
+    isDefault    Boolean       @default(false)
+    userId       String
+    user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+    transactions Transaction[]
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
 
-    name   String // Category name (e.g., "Groceries", "Salary")
-    userId String // User to whom the category belongs
-    type   TransactionType // Transaction type (INCOME or EXPENSE)
-
-    user        User          @relation(fields: [userId], references: [id])
-    Transaction Transaction[] @relation("CategoryTransactions") // All transactions for the category
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    @@index([userId])
+    @@map("accounts")
 }
 
-// Enum to distinguish between transaction types (Income vs Expense)
+// Enum to specify account types
+enum AccountType {
+    CURRENT
+    SAVINGS
+}
+
+// Enum to specify different payment modes for transactions
+enum PaymentMode {
+    UPI
+    CASH
+    CARD
+    BANK_TRANSFER
+}
+
+// Transaction model for logging income/expense details
+model Transaction {
+    id                String             @id @default(uuid())
+    type              TransactionType
+    amount            Float
+    description       String?
+    date              DateTime
+    category          String
+    receiptUrl        String?
+    isRecurring       Boolean            @default(false)
+    recurringInterval RecurringInterval?
+    nextRecurringDate DateTime?
+    lastProcessedDate DateTime?
+    status            TransactionStatus  @default(COMPLETED)
+    userId            String
+    user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+    accountId         String
+    account           Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
+    paymentMode       PaymentMode        @default(UPI)
+    createdAt         DateTime           @default(now())
+    updatedAt         DateTime           @updatedAt
+
+    @@index([userId])
+    @@index([accountId])
+    @@map("transactions")
+}
+
+// Enum to specify transaction types (Income or Expense)
 enum TransactionType {
     INCOME
     EXPENSE
 }
 
-// Enum to define payment methods
-enum PaymentModeType {
-    UPI
-    CASH
-    WALLET
-    CARD
+// Enum for recurring intervals (if applicable to your system)
+enum RecurringInterval {
+    DAILY
+    WEEKLY
+    MONTHLY
+    YEARLY
 }
 
-// Transaction model for tracking both income and expenses
-model Transaction {
-    id Int @id @default(autoincrement())
+// Enum for transaction status (e.g., completed, pending, etc.)
+enum TransactionStatus {
+    COMPLETED
+    PENDING
+    FAILED
+}
 
-    amount      Float // Amount of the transaction
-    comment     String? // Optional comment
-    date        DateTime
-    categoryId  Int
-    userId      String
-    type        TransactionType // Type of transaction (INCOME or EXPENSE)
-    paymentMode PaymentModeType @default(UPI)
+// Budget model to handle user budgets
+model Budget {
+    id            String    @id @default(uuid())
+    amount        Float
+    lastAlertSent DateTime?
+    userId        String
+    user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @updatedAt
 
-    category Category @relation("CategoryTransactions", fields: [categoryId], references: [id])
-    user     User     @relation("UserTransactions", fields: [userId], references: [id])
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    @@index([userId])
+    @@map("budgets")
 }
