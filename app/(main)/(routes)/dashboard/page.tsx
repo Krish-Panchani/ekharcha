@@ -16,6 +16,8 @@ import PeriodBalance from "./PeriodBalance";
 import { useTransactions } from "@/app/hooks/useTransactions";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import NetBalanceSkeleton from "./NetBalanceSkeleton";
+import PeriodBalanceSkeleton from "./PeriodBalanceSkeleton";
 
 export default function DashboardPage() {
   const { isSignedIn } = useAuth();
@@ -31,20 +33,23 @@ export default function DashboardPage() {
     return <p>Redirecting to Sign In...</p>; // Show this while redirecting
   }
 
-  const { summary, loading: summaryLoading, error: summaryError, mutate: updateSummaryData } =
-    useSummary();
+  const {
+    summary,
+    loading: summaryLoading,
+    error: summaryError,
+    mutate: updateSummaryData,
+  } = useSummary();
   const { transactions, addTransaction } = useTransactions();
 
-  const [selectedPeriod, setSelectedPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
+  const [selectedPeriod, setSelectedPeriod] = useState<
+    "daily" | "weekly" | "monthly"
+  >("daily");
 
   const handleExpenseAdded = (newExpense: { amount: number }) => {
-    updateSummaryData(
-      (prev) => {
-        if (!prev) return defaultSummaryWithExpense(newExpense.amount);
-        return updateSummary(prev, newExpense.amount, "expense");
-      },
-      false
-    );
+    updateSummaryData((prev) => {
+      if (!prev) return defaultSummaryWithExpense(newExpense.amount);
+      return updateSummary(prev, newExpense.amount, "expense");
+    }, false);
 
     const newTransaction = {
       id: Date.now(),
@@ -59,13 +64,10 @@ export default function DashboardPage() {
   };
 
   const handleIncomeAdded = (newIncome: { amount: number }) => {
-    updateSummaryData(
-      (prev) => {
-        if (!prev) return defaultSummaryWithIncome(newIncome.amount);
-        return updateSummary(prev, newIncome.amount, "income");
-      },
-      false
-    );
+    updateSummaryData((prev) => {
+      if (!prev) return defaultSummaryWithIncome(newIncome.amount);
+      return updateSummary(prev, newIncome.amount, "income");
+    }, false);
 
     const newTransaction = {
       id: Date.now(),
@@ -79,7 +81,7 @@ export default function DashboardPage() {
     addTransaction(newTransaction);
   };
 
-  if (summaryLoading) return <p>Loading...</p>;
+  // if (summaryLoading) return <p>Loading...</p>;
   if (summaryError) return <p>Error: {summaryError.message}</p>;
 
   const { income, expense } = summary || {
@@ -91,14 +93,30 @@ export default function DashboardPage() {
     <div className="min-h-screen flex flex-col">
       <DashboardHeader />
       <div className="bg-white py-4 mt-4">
-        <NetBalanceDisplay income={income} expense={expense} />
+        {summaryLoading ? (
+          <NetBalanceSkeleton />
+        ) : (
+          <NetBalanceDisplay income={income} expense={expense} />
+        )}
+
         <div className="mt-6"></div>
-        <PeriodBalance
+
+        {summaryLoading ? (
+          <PeriodBalanceSkeleton />
+        ) : (
+          <PeriodBalance
+            income={income}
+            expense={expense}
+            selectedPeriod={selectedPeriod}
+            onPeriodChange={setSelectedPeriod}
+          />
+        )}
+        {/* <PeriodBalance
           income={income}
           expense={expense}
           selectedPeriod={selectedPeriod}
           onPeriodChange={setSelectedPeriod}
-        />
+        /> */}
       </div>
       <LastTransactions />
       <div className="fixed bottom-0 left-0 right-0 bg-gray-100 p-4 flex justify-center gap-4 shadow-md">
