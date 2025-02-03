@@ -5,7 +5,7 @@ interface Transaction {
   id: number;
   amount: number;
   type: string;
-  category: { name: string };
+  category: string;
   paymentMode: string;
   date: string;
 }
@@ -31,7 +31,7 @@ export function useTransactions() {
     fetcher,
     {
       revalidateOnFocus: false,
-      revalidateOnReconnect: false,
+      revalidateOnReconnect: true,
     }
   );
 
@@ -57,7 +57,9 @@ export function useTransactions() {
     setIsLoadingMore(true);
 
     try {
-      const newTransactions = await fetcher(`/api/transaction?skip=${skip}&take=${take}`);
+      const newTransactions = await fetcher(
+        `/api/transaction?skip=${skip}&take=${take}`
+      );
       setTransactions((prev) => [...prev, ...newTransactions]);
       setSkip((prev) => prev + newTransactions.length);
       if (newTransactions.length < take) setHasMore(false);
@@ -76,5 +78,6 @@ export function useTransactions() {
     isLoadingMore,
     hasMore,
     addTransaction,
+    mutate,
   };
 }
