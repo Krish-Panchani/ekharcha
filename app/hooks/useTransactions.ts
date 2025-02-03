@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import useSWR from "swr";
+import axios from "axios";
 
 interface Transaction {
   id: number;
@@ -10,72 +11,44 @@ interface Transaction {
   date: string;
 }
 
-async function fetcher(url: string) {
-  const res = await fetch(url);
-  if (!res.ok) {
-    const errorBody = await res.json();
-    throw new Error(errorBody?.message || "Failed to fetch data.");
-  }
-  return res.json();
-}
+// Fetcher function that SWR will use for data fetching
+const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
 export function useTransactions() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [skip, setSkip] = useState(0);
   const take = 10;
 
-  const { data, error, mutate } = useSWR<Transaction[]>(
+  // Use SWR hook to fetch and cache the transactions data
+  const { data, error, mutate, isValidating } = useSWR<Transaction[]>(
     `/api/transaction?skip=${skip}&take=${take}`,
     fetcher,
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
+      keepPreviousData: true, // This prevents data flickering when paginating
     }
   );
 
-  // Load initial transactions
-  useEffect(() => {
-    if (data) {
-      setTransactions(data);
-      setSkip(data.length);
-      if (data.length < take) setHasMore(false);
-    }
-  }, [data]);
+  const isLoading = !data && !error;
+  const hasMore = data?.length === take;
 
   // Add a new transaction
   const addTransaction = (newTransaction: Transaction) => {
-    setTransactions((prev) => [newTransaction, ...prev]);
-    mutate(); // Revalidate transactions from the API after updating locally
+    mutate((prev) => [newTransaction, ...(prev || [])], false); // Optimistically update the local cache
   };
 
   // Load more transactions
-  const loadMore = async () => {
-    if (!hasMore || isLoadingMore) return;
-
-    setIsLoadingMore(true);
-
-    try {
-      const newTransactions = await fetcher(
-        `/api/transaction?skip=${skip}&take=${take}`
-      );
-      setTransactions((prev) => [...prev, ...newTransactions]);
-      setSkip((prev) => prev + newTransactions.length);
-      if (newTransactions.length < take) setHasMore(false);
-    } catch (err) {
-      console.error("Error loading more transactions:", err);
-    } finally {
-      setIsLoadingMore(false);
-    }
+  const loadMore = () => {
+    if (!hasMore || isValidating) return;
+    setSkip((prev) => prev + take);
   };
 
   return {
-    transactions,
+    transactions: data || [],
     error,
-    isLoading: !data && !error,
+    isLoading,
     loadMore,
-    isLoadingMore,
+    isLoadingMore: isValidating,
     hasMore,
     addTransaction,
     mutate,
