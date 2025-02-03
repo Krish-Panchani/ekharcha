@@ -23,11 +23,7 @@ import {
 } from "@/components/ui/select";
 import { PaymentMode, TransactionType } from "@prisma/client";
 import { useAddTransaction } from "@/app/hooks/useAddTransaction";
-import {
-  RecurringInterval,
-  Transaction,
-  TransactionStatus,
-} from "@/app/types/types";
+import { Transaction, TransactionStatus } from "@/app/types/types";
 
 interface IncomeDrawerProps {
   onTransactionAdded: (transaction: Transaction) => void;
