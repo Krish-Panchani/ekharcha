@@ -67,9 +67,9 @@ export default function RecentTransactions() {
         )}
         {hasMore ? (
           <div className="mt-6 flex justify-center">
-            <Button onClick={loadMore} disabled={isLoadingMore}>
+            <button onClick={loadMore} disabled={isLoadingMore}>
               {isLoadingMore ? "Loading..." : "Load More"}
-            </Button>
+            </button>
           </div>
         ) : (
           <div className="mt-6 flex justify-center text-gray-500">

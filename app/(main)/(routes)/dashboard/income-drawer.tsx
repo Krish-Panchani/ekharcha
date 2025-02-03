@@ -92,7 +92,9 @@ export default function IncomeDrawer({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="outline">Add Income</Button>
+        <Button variant="outline" className="border-green-400 text-green-500">
+          Add Income
+        </Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>

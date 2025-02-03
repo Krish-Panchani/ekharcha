@@ -93,7 +93,9 @@ export default function ExpenseDrawer({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="outline">Add Expense</Button>
+        <Button variant="outline" className="border-red-400 text-red-500">
+          Add Expense
+        </Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
