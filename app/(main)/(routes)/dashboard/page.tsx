@@ -9,7 +9,6 @@ import NetBalanceSkeleton from "./NetBalanceSkeleton";
 
 import NetBalanceDisplay from "./NetBalanceDisplay";
 import RecentTransactions from "./RecentTransactions";
-import LastTransactions from "./LastTransactions";
 import IncomeDrawer from "./income-drawer";
 import ExpenseDrawer from "./expence-drawer";
 import PeriodBalance from "./PeriodBalance";
@@ -61,8 +60,6 @@ export default function DashboardPage() {
     };
 
     addTransaction(newTransaction);
-    // mutate((prev) => [...(prev || []), newTransaction], false); // Add new transaction and prevent revalidation
-    // mutate();
   };
 
   const handleIncomeAdded = (newIncome: Transaction) => {
@@ -86,8 +83,6 @@ export default function DashboardPage() {
     };
 
     addTransaction(newTransaction); // Add new transaction
-    // mutate((prev) => [...(prev || []), newTransaction], false);
-    // mutate();
   };
 
   if (summaryError) return <p>Error: {summaryError.message}</p>;
