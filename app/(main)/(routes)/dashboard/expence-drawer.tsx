@@ -21,14 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useUser } from "@clerk/nextjs";
 import { PaymentMode, TransactionType } from "@prisma/client";
 import { useAddTransaction } from "@/app/hooks/useAddTransaction";
-import {
-  RecurringInterval,
-  Transaction,
-  TransactionStatus,
-} from "@/app/types/types";
+import { Transaction, TransactionStatus } from "@/app/types/types";
 
 interface ExpenseDrawerProps {
   onTransactionAdded: (transaction: Transaction) => void;

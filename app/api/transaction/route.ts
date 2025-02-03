@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     if (!profile) {
       return new NextResponse("Profile not found", { status: 404 });
     }
-    const { id } = profile;
+    // const { id } = profile;
 
     if (!authenticatedUserId) {
       return new NextResponse("Unauthorized", { status: 401 });

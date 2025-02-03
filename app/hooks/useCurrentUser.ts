@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs"; // If using Clerk for authentication
+// import { useUser } from "@clerk/nextjs"; // If using Clerk for authentication
 import { currentProfile } from "@/lib/current-profile";
 
 export const useCurrentUser = () => {

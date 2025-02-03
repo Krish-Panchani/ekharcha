@@ -531,7 +531,9 @@ function TestimonialCard({
   return (
     <Card className="hover:shadow-lg transition-shadow duration-300">
       <CardHeader>
-        <CardTitle className="text-lg sm:text-xl italic">"{quote}"</CardTitle>
+        <CardTitle className="text-lg sm:text-xl italic">
+          &quot;{quote}&quot;
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <CardDescription className="mb-4 text-sm sm:text-base">
