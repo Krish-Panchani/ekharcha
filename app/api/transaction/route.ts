@@ -68,10 +68,15 @@ export async function GET(req: NextRequest) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const skip = Number(searchParams.get("skip")) || 0;
+    const take = Number(searchParams.get("take")) || 10;
+
     const transactions = await db.transaction.findMany({
       where: { userId: profile?.id },
       orderBy: { date: "desc" },
-      take: 10,
+      skip,
+      take,
       select: {
         id: true,
         amount: true,
