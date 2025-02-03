@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import useSWR from "swr";
+import { useState } from "react";
+import useSWRInfinite from "swr/infinite";
 import axios from "axios";
 
-interface Transaction {
+export interface Transaction {
   id: number;
   amount: number;
   type: string;
@@ -11,40 +11,45 @@ interface Transaction {
   date: string;
 }
 
-// Fetcher function that SWR will use for data fetching
+// Fetcher function for SWR
 const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
 export function useTransactions() {
-  const [skip, setSkip] = useState(0);
-  const take = 10;
+  const take = 10; // Number of items per page
 
-  // Use SWR hook to fetch and cache the transactions data
-  const { data, error, mutate, isValidating } = useSWR<Transaction[]>(
-    `/api/transaction?skip=${skip}&take=${take}`,
+  // Using useSWRInfinite for pagination
+  const { data, error, mutate, isValidating, setSize } = useSWRInfinite(
+    (index) => `/api/transaction?skip=${index * take}&take=${take}`,
     fetcher,
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      keepPreviousData: true, // This prevents data flickering when paginating
+      keepPreviousData: true, // Keeps previous data while loading more
     }
   );
 
+  // Checking if data is loading
   const isLoading = !data && !error;
-  const hasMore = data?.length === take;
 
-  // Add a new transaction
-  const addTransaction = (newTransaction: Transaction) => {
-    mutate((prev) => [newTransaction, ...(prev || [])], false); // Optimistically update the local cache
+  // Checking if there's more data to load (when data length is equal to the requested `take`)
+  const hasMore = data?.[data.length - 1]?.length === take;
+
+  // Flattening the data from all pages
+  const transactions = data ? [].concat(...data) : [];
+
+  // Load more data when the user clicks "Load More"
+  const loadMore = () => {
+    if (isValidating || !hasMore) return; // Prevents loading more if already loading or no more data
+    setSize((prev) => prev + 1); // Increases the number of pages to load
   };
 
-  // Load more transactions
-  const loadMore = () => {
-    if (!hasMore || isValidating) return;
-    setSkip((prev) => prev + take);
+  // Adding a new transaction (optimistic update)
+  const addTransaction = (newTransaction: Transaction) => {
+    mutate((prev) => [newTransaction, ...(prev || [])], false); // Update local cache optimistically
   };
 
   return {
-    transactions: data || [],
+    transactions,
     error,
     isLoading,
     loadMore,
