@@ -22,6 +22,7 @@ import {
   defaultSummaryWithIncome,
   updateSummary,
 } from "@/app/helper/summaryHelpers";
+import RecentTrend from "./RecentTrend";
 
 export default function DashboardPage() {
   const { isSignedIn } = useAuth();
@@ -113,7 +114,11 @@ export default function DashboardPage() {
           />
         )}
       </div>
-      <RecentTransactions />
+
+      <div className="px-2 space-y-4">
+        <RecentTrend />
+        <RecentTransactions />
+      </div>
       <div className="sticky bottom-0 left-0 right-0 bg-gray-100 p-4 flex justify-center gap-4 shadow-md">
         <ExpenseDrawer onTransactionAdded={handleExpenseAdded} />
         <IncomeDrawer onTransactionAdded={handleIncomeAdded} />
