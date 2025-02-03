@@ -59,8 +59,9 @@ export default function DashboardPage() {
       updatedAt: new Date().toISOString(),
     };
 
-    addTransaction(newTransaction); // Add new transaction
-    mutate();
+    addTransaction(newTransaction);
+    // mutate((prev) => [...(prev || []), newTransaction], false); // Add new transaction and prevent revalidation
+    // mutate();
   };
 
   const handleIncomeAdded = (newIncome: Transaction) => {
@@ -84,7 +85,8 @@ export default function DashboardPage() {
     };
 
     addTransaction(newTransaction); // Add new transaction
-    mutate();
+    // mutate((prev) => [...(prev || []), newTransaction], false);
+    // mutate();
   };
 
   if (summaryError) return <p>Error: {summaryError.message}</p>;
