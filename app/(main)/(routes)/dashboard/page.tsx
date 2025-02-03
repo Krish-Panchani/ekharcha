@@ -8,6 +8,7 @@ import PeriodBalanceSkeleton from "./PeriodBalanceSkeleton";
 import NetBalanceSkeleton from "./NetBalanceSkeleton";
 
 import NetBalanceDisplay from "./NetBalanceDisplay";
+import RecentTransactions from "./RecentTransactions";
 import LastTransactions from "./LastTransactions";
 import IncomeDrawer from "./income-drawer";
 import ExpenseDrawer from "./expence-drawer";
@@ -117,8 +118,8 @@ export default function DashboardPage() {
           />
         )}
       </div>
-      <LastTransactions />
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-100 p-4 flex justify-center gap-4 shadow-md">
+      <RecentTransactions />
+      <div className="sticky bottom-0 left-0 right-0 bg-gray-100 p-4 flex justify-center gap-4 shadow-md">
         <ExpenseDrawer onTransactionAdded={handleExpenseAdded} />
         <IncomeDrawer onTransactionAdded={handleIncomeAdded} />
       </div>
