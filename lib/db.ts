@@ -1,13 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 
 declare global {
-  namespace NodeJS {
-    var prisma: PrismaClient | undefined;
-  }
+  var prisma: PrismaClient | undefined;
 }
 
-export const db: PrismaClient =
-  (globalThis as any).prisma ||
+export const db =
+  globalThis.prisma ||
   new PrismaClient({
     log:
       process.env.NODE_ENV === "development"
@@ -16,4 +14,4 @@ export const db: PrismaClient =
     errorFormat: process.env.NODE_ENV === "development" ? "pretty" : "minimal",
   });
 
-if (process.env.NODE_ENV !== "production") (globalThis as any).prisma = db;
+if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
